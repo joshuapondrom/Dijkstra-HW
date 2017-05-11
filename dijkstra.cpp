@@ -12,7 +12,7 @@
 #include <algorithm>
 
 #define _D_ if(DEBUG) cout << 
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 using namespace std;
 
@@ -80,28 +80,30 @@ graph getInput()
   return current;
 }
 
+map<string, int> distances;
+
 class comparePair
 {
   public:
-    bool operator()(pair<string, int>& rhs, pair<string, int>& lhs)
+    bool operator()(string lhs, string rhs)
     {
-      if(rhs.second > lhs.second)
-      {
-        return true;
-      }
-      return false;
+      return distances[lhs] > distances[rhs];
     }
 };
+
+bool comparer(string lhs, string rhs)
+{
+  return distances[lhs] > distances[rhs];
+}
 
 int shortestPath(graph ourGraph)
 {
   _D_ "FINDING SHORTEST PATH\n";
-  map<string, int> distances;
   map<string, int> previous;
 
   vector<string> nodes;
   
-  auto comparer = [&](string lhs, string rhs){return distances[lhs] > distances[rhs];};
+  //auto comparer = [&](string lhs, string rhs){return distances[lhs] > distances[rhs];};
 
   for(map<string, list< pair<string, int> > >::iterator it = ourGraph.adjList.begin(); it != ourGraph.adjList.end(); ++it)
   {
@@ -115,17 +117,18 @@ int shortestPath(graph ourGraph)
       _D_ it->first << " IS INT MAX\n";
       distances[it->first] = INT_MAX;
     }
+    //queue.push(make_pair(it->first, distances[it->first]));
     nodes.push_back(it->first);
-    //push_heap(begin(nodes), end(nodes), comparePair);
     push_heap(nodes.begin(), nodes.end(), comparer);
   }
   
   while(!nodes.empty())
   {
-    //pop_heap(begin(nodes), end(nodes), comparePair);
     pop_heap(nodes.begin(), nodes.end(), comparer);
     string minimum = nodes.back();
     nodes.pop_back();
+    //string minimum = queue.top().first;
+    //queue.pop();
     _D_ "CHECKING MINIMUM; IT IS " << minimum << endl;
 
     if(minimum == "robotbar")
@@ -145,7 +148,6 @@ int shortestPath(graph ourGraph)
       {
         _D_ "NEW DISTANCE IS LESS THAN\n";
         distances[it->first] = alt;
-	//make_heap(begin(nodes),end(nodes), comparePair);
         make_heap(nodes.begin(), nodes.end(), comparer);
       }
     }
@@ -224,8 +226,9 @@ int main()
   for(int i = 1; i <= numCases; i++)
   {
     graph current = getInput();
-    current.print();
-    cout << "#" << i << " : " << current.name << ", " << shortestPath(current) << " tokens.\n\n";
+    if(DEBUG)current.print();
+    cout << "#" << i << " : " << current.name << ", " << shortestPath(current) << " tokens.\n";
+    _D_ endl;
   }
   return 0;
 }
