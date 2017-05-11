@@ -21,11 +21,6 @@ struct graph
   string name;
   int vertices;
   map<string, list< pair<string, int> > > adjList;
-
-  void addVertex(string name)
-  {
-    
-  }
   
   void addEdge(string from, string to, int distance)
   {
@@ -44,10 +39,12 @@ struct graph
   {
     cout << "Town: " << name << endl;
     cout << "Vertices: " << vertices << endl;
-    for(map<string, list< pair<string, int> > >::iterator it = adjList.begin(); it != adjList.end(); ++it)
+    for(map<string, list< pair<string, int> > >::iterator it = adjList.begin();
+        it != adjList.end(); ++it)
     {
       cout << it->first;
-      for(list< pair<string, int> >::iterator ti = adjList[it->first].begin(); ti != adjList[it->first].end(); ++ti)
+      for(list< pair<string, int> >::iterator ti = adjList[it->first].begin();
+          ti != adjList[it->first].end(); ++ti)
       {
         cout << "->" << ti->first << " " << ti->second;
       }
@@ -79,45 +76,39 @@ graph getInput()
   current.addEdge("robotbar", "nowhere" ,0);
   return current;
 }
-
-map<string, int> distances;
-
-class comparePair
+namespace my_dist
 {
-  public:
-    bool operator()(string lhs, string rhs)
-    {
-      return distances[lhs] > distances[rhs];
-    }
-};
+  map<string, int> distances;
+}
 
 bool comparer(string lhs, string rhs)
 {
-  return distances[lhs] > distances[rhs];
+  return my_dist::distances[lhs] > my_dist::distances[rhs];
 }
 
 int shortestPath(graph ourGraph)
 {
   _D_ "FINDING SHORTEST PATH\n";
   map<string, int> previous;
-
+  
+  my_dist::distances.clear();
   vector<string> nodes;
   
-  //auto comparer = [&](string lhs, string rhs){return distances[lhs] > distances[rhs];};
 
-  for(map<string, list< pair<string, int> > >::iterator it = ourGraph.adjList.begin(); it != ourGraph.adjList.end(); ++it)
+  for(map<string,list<pair<string,int> > >::iterator 
+      it = ourGraph.adjList.begin(); 
+      it != ourGraph.adjList.end(); ++it)
   {
     if(it->first == "airport")
     {
       _D_ "SOURCE IS ZERO\n";
-      distances[it->first] = 0;
+      my_dist::distances[it->first] = 0;
     }
     else
     {
       _D_ it->first << " IS INT MAX\n";
-      distances[it->first] = INT_MAX;
+      my_dist::distances[it->first] = INT_MAX;
     }
-    //queue.push(make_pair(it->first, distances[it->first]));
     nodes.push_back(it->first);
     push_heap(nodes.begin(), nodes.end(), comparer);
   }
@@ -127,96 +118,32 @@ int shortestPath(graph ourGraph)
     pop_heap(nodes.begin(), nodes.end(), comparer);
     string minimum = nodes.back();
     nodes.pop_back();
-    //string minimum = queue.top().first;
-    //queue.pop();
     _D_ "CHECKING MINIMUM; IT IS " << minimum << endl;
 
     if(minimum == "robotbar")
     {
-      return distances["robotbar"];
+      return my_dist::distances["robotbar"];
     }
-    if(distances[minimum] == INT_MAX)
+    if(my_dist::distances[minimum] == INT_MAX)
     {
       break;
     }
-    for(list< pair<string, int> >::iterator it = ourGraph.adjList[minimum].begin(); it != ourGraph.adjList[minimum].end(); ++it)
+    for(list<pair<string,int> >::iterator 
+        it = ourGraph.adjList[minimum].begin(); 
+	it != ourGraph.adjList[minimum].end(); ++it)
     {
       _D_ "CHECKING NEIGHBOR " << it->second << endl;
-      int alt = distances[minimum] + it->second;
+      int alt = my_dist::distances[minimum] + it->second;
       _D_ "NEW DISTANCE IS " << alt << endl;
-      if(alt < distances[it->first])
+      if(alt < my_dist::distances[it->first])
       {
         _D_ "NEW DISTANCE IS LESS THAN\n";
-        distances[it->first] = alt;
+        my_dist::distances[it->first] = alt;
         make_heap(nodes.begin(), nodes.end(), comparer);
       }
     }
   }
   return -1;
-  /*map<string, int> distances;
-  distances["airport"] = 0;
-  
-  priority_queue<pair<string, int>, vector<pair<string, int> >, comparePair> queue;
-  
-  for(map<string, list< pair<string, int> > >::iterator it = ourGraph.adjList.begin(); it != ourGraph.adjList.end(); ++it)
-  {
-    if(it->first != "airport")
-    {
-      distances[it->first] = INT_MAX;
-    }
-    queue.push(make_pair(it->first,distances[it->first]));
-  }
-
-  while(!queue.empty())
-  {
-    pair<string, int> current = queue.top();
-    queue.pop();
-    for(list< pair<string, int> >::iterator it = ourGraph.adjList[current.first].begin(); it != ourGraph.adjList[current.first].end(); ++it)
-    {
-      int alt;
-      alt = distances[current.first] + it->second;
-      if(alt < distances[it->first])
-      {
-        distances[it->first] = alt;
-      }
-    }
-  }
-  return distances["robotbar"];*/
-
-  /*//int small = INT_MAX;
-  map<string, bool> visited;
-  map<string, int> distances;
-  for(map<string, list< pair<string, int> > >::iterator it = ourGraph.adjList.begin(); it != ourGraph.adjList.end(); ++it)
-  {
-    distances[it->first] = INT_MAX;
-  }
-  distances["robotbar"] = INT_MAX;
-  distances["airport"] = 0;
-  priority_queue<pair<string, int>, vector<pair<string, int> >, comparePair> queue;
-  queue.push(make_pair("airport",0));
-  while(!queue.empty())
-  {
-    pair<string, int> temp = queue.top();
-    queue.pop();
-    string node = temp.first;
-    for(list< pair<string, int> >::iterator it = ourGraph.adjList[node].begin(); it != ourGraph.adjList[node].end(); ++it)
-    {
-      if(distances[node] + it->second < distances[it->first])
-      {
-        distances[it->first] = distances[node] + it->second;
-      }
-      if(!visited[it->first])
-      {
-        pair<string, int> newPair;
-	newPair.second=it->second;
-	newPair.first=distances[it->first];
-	queue.push(newPair);
-	visited[it->first]=true;
-      }
-    }
-  }
-  return distances["robotbar"];*/
-
 }
 
 int main()
@@ -227,7 +154,8 @@ int main()
   {
     graph current = getInput();
     if(DEBUG)current.print();
-    cout << "#" << i << " : " << current.name << ", " << shortestPath(current) << " tokens.\n";
+    cout << "#" << i << " : " << current.name << ", " << shortestPath(current) 
+         << " tokens.\n";
     _D_ endl;
   }
   return 0;
